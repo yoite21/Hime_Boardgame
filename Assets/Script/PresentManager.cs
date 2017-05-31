@@ -143,6 +143,21 @@ public class PresentManager : MonoBehaviour {
 		return false;
 	}
 
+	private void setPresentGroupByGroup(Present.PresentGroup group)
+	{
+		Present[] tmp;
+		if ( (group == Present.PresentGroup.UNSELECTED_GROUP1) 
+			|| (group == Present.PresentGroup.GROUP1)) {
+			tmp = present1Set;
+		} else {
+			tmp = present2Set;
+		}
+
+		foreach (var present in tmp) {
+			present.SelectionGroup = group;
+		}
+	}
+
 	public void selectPresent(Present present)
 	{
 		if (gameManager.CurrentState == GameManager.GameState.PLAYER_SELECTION) {
@@ -155,22 +170,33 @@ public class PresentManager : MonoBehaviour {
 					present.SelectionGroup = Present.PresentGroup.UNSELECTED;
 					break;
 				case Present.PresentGroup.GROUP1:
-					present.SelectionGroup = Present.PresentGroup.UNSELECTED_GROUP1;
+					setPresentGroupByGroup (Present.PresentGroup.UNSELECTED_GROUP1);
 					break;
 				case Present.PresentGroup.GROUP2:
-					present.SelectionGroup = Present.PresentGroup.UNSELECTED_GROUP2;
+					setPresentGroupByGroup (Present.PresentGroup.UNSELECTED_GROUP2);
 					break;
 				default:
 					present.SelectionGroup = Present.PresentGroup.UNSELECTED;
 					break;
 				}
-				unselectFromPresentSet (present);
 			} else {
 				if (isSelectable (present)) {
 					increaseSelectCount (1);
 
-					present.SelectionGroup = getPresentGroupType ();
-					PresentSet = present;
+					switch (present.SelectionGroup) {
+					case Present.PresentGroup.UNSELECTED:
+						present.SelectionGroup = Present.PresentGroup.GROUP0;
+						break;
+					case Present.PresentGroup.UNSELECTED_GROUP1:
+						setPresentGroupByGroup(Present.PresentGroup.GROUP1);
+						break;
+					case Present.PresentGroup.UNSELECTED_GROUP2:
+						setPresentGroupByGroup(Present.PresentGroup.GROUP2);
+						break;
+						default:
+						present.SelectionGroup = Present.PresentGroup.GROUP0;
+						break;
+					}
 				}
 			}
 		} else {
@@ -211,6 +237,7 @@ public class PresentManager : MonoBehaviour {
 
 			getOpponentSelectedPresent (out opponentPresentList, out myPresentList);
 			unselectPresentList (myPresentList);
+			unselectPresentList (opponentPresentList);
 
 			switch (presentSelectCount) {
 			case 1:
@@ -396,7 +423,7 @@ public class PresentManager : MonoBehaviour {
 
 	public bool isPresentSetSelect()
 	{
-		return (presentSelectLimit == 4) || (present1Set[0] != null);
+		return presentSelectLimit == 4;
 	}
 
 	private void prioritySortInHand()
