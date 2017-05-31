@@ -32,10 +32,7 @@ public class SelectController : MonoBehaviour {
 
 	public void actionPoolReset ()
 	{
-//		actionPool = new List<int>{ 1, 2, 3, 4 };
-
-		//		actionPool = new List<int>{ 1,2,1,2,1 };
-				actionPool = new List<int>{ 4,4,4,4,4 };
+		actionPool = new List<int>{ 1, 2, 3, 4 };
 	}
 
 	public void doOpponentTurn()
@@ -45,7 +42,11 @@ public class SelectController : MonoBehaviour {
 		actionPool.RemoveAt (i);
 
 		Debug.Log ("opponent do action : " + action);
-		var list = presentManager.selectRandomOpponentPresent (action);
+
+		var presentList = presentManager.getOpponentPresentInHand ();
+		var list = chooseRandomPresentList (presentList, action);
+		presentManager.setPresentGroupStore (list);
+
 		switch (action) {
 		case 1:
 			presentManager.presentToOpponentSecret (list [0]);
@@ -62,5 +63,23 @@ public class SelectController : MonoBehaviour {
 			gameManager.CurrentState = GameManager.GameState.PLAYER_SELECTION;
 			break;
 		}
+	}
+
+	private List<Present> chooseRandomPresentList(List<Present> presentList, int count)
+	{
+		var index = new List<int> ();
+		for (int i = 0; i < presentList.Count; i++) {
+			index.Add (i);
+		}
+		
+		List<Present> retv = new List<Present> ();
+		for (int i = 0; i < count; i++) {
+			var randomIndex = Random.Range (0, index.Count);
+			retv.Add (presentList [index [randomIndex]]);
+
+			index.RemoveAt (randomIndex);
+		}
+
+		return retv;
 	}
 }

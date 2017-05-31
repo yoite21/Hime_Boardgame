@@ -38,6 +38,25 @@ public class PresentManager : MonoBehaviour {
 	private const int NumOfPresent = 21;
 	private Present[] presentList = new Present[NumOfPresent];
 
+	private int presentSelectCount;
+	private int presentSelectLimit;
+
+	private Present[] presentGroup1Store = new Present[2];
+	private Present[] presentGroup2Store = new Present[2];
+	private Present PresentGroupStore {
+		set { 
+			if (presentGroup1Store [0] == null) {
+				presentGroup1Store [0] = value;
+			} else if (presentGroup1Store [1] == null) {
+				presentGroup1Store [1] = value;
+			} else if (presentGroup2Store [0] == null) {
+				presentGroup2Store [0] = value;
+			} else if (presentGroup2Store [1] == null) {
+				presentGroup2Store [1] = value;
+			}
+		}
+	}
+
 	void Start()
 	{
 		// present instantiate
@@ -81,52 +100,16 @@ public class PresentManager : MonoBehaviour {
 		sharePresent (DeadPresent, PresentDirection.BACK, DeadPresentNum, ref n);
 
 		prioritySortInHand ();
-		presentSetReset ();
+		presentGroupReset ();
 	}
-
-	private void sharePresent(GameObject parent, PresentDirection direction, int count, ref int listIndex)
-	{
-		for (int i = 0; i < count; i++) {
-			presentList [listIndex].transform.SetParent (parent.transform);
-			presentList [listIndex].PresentDirection = direction;
-			listIndex++;
-		}
-	}
-
-	private int presentSelectCount;
-	private int presentSelectLimit;
 
 	public void resetPresentSelectLimit(int value)
 	{
 		presentSelectCount = 0;
 		presentSelectLimit = value;
 
-		unselectMyPresents ();
-		presentSetReset ();
-	}
-
-	private void unselectMyPresents()
-	{
-		for (int i = 0; i < MyPresents.transform.childCount; i++) {
-			MyPresents.transform.GetChild (i).gameObject.GetComponent<Present> ().SelectionGroup = Present.PresentGroup.UNSELECTED;
-		}
-	}
-
-	private void unselectPresentList(List<Present> list)
-	{
-		foreach (var present in list) {
-			present.SelectionGroup = Present.PresentGroup.UNSELECTED;
-		}
-	}
-
-	public bool isSelectable()
-	{
-		return presentSelectCount < presentSelectLimit;
-	}
-
-	public bool isSelectableState()
-	{
-		return presentSelectCount < presentSelectLimit;
+		unselectPresentsInMyHand ();
+		presentGroupReset ();
 	}
 
 	public bool isSelectable(Present present)
@@ -143,20 +126,6 @@ public class PresentManager : MonoBehaviour {
 		return false;
 	}
 
-	private void setPresentGroupByGroup(Present.PresentGroup group)
-	{
-		Present[] tmp;
-		if ( (group == Present.PresentGroup.UNSELECTED_GROUP1) 
-			|| (group == Present.PresentGroup.GROUP1)) {
-			tmp = present1Set;
-		} else {
-			tmp = present2Set;
-		}
-
-		foreach (var present in tmp) {
-			present.SelectionGroup = group;
-		}
-	}
 
 	public void selectPresent(Present present)
 	{
@@ -204,13 +173,13 @@ public class PresentManager : MonoBehaviour {
 				increaseSelectCount (-1);
 
 				present.SelectionGroup = Present.PresentGroup.UNSELECTED;
-				unselectFromPresentSet (present);
+				removeFromPresentGroupStore (present);
 			} else {
 				if (isSelectable (present)) {
 					increaseSelectCount (1);
 
-					present.SelectionGroup = getPresentGroupType ();
-					PresentSet = present;
+					present.SelectionGroup = getTypeOfEmptyPresentGroupStore ();
+					PresentGroupStore = present;
 				}
 			}
 		}
@@ -228,32 +197,21 @@ public class PresentManager : MonoBehaviour {
 
 	public void actionPresent()
 	{
-
-
 		if (gameManager.CurrentState == GameManager.GameState.PLAYER_SELECTION) {
 
 			List<Present> opponentPresentList;
 			List<Present> myPresentList;
 
-			getOpponentSelectedPresent (out opponentPresentList, out myPresentList);
-			unselectPresentList (myPresentList);
-			unselectPresentList (opponentPresentList);
+			divideSelectPresentInOpponent (out opponentPresentList, out myPresentList);
+			unselectPresentsInList (myPresentList);
+			unselectPresentsInList (opponentPresentList);
 
-			switch (presentSelectCount) {
-			case 1:
-				himeManager.presentToHime (myPresentList, opponentPresentList);
-				break;
-			case 2:
-				himeManager.presentToHime (myPresentList, opponentPresentList);
-				break;
-			default:
-				break;
-			}
+			himeManager.presentToHime (myPresentList, opponentPresentList);
 
 		} else {
 			List<Present> opponentPresentList;
-			var presentList = getSelectedPresent ();
-			unselectPresentList (presentList);
+			var presentList = getSelectedPresentInMyHand ();
+			unselectPresentsInList (presentList);
 
 
 			switch (presentSelectCount) {
@@ -270,8 +228,8 @@ public class PresentManager : MonoBehaviour {
 				break;
 			case 4:
 
-				selectController.choosePresentSet (ref present1Set, ref present2Set);
-				himeManager.presentToHime (new List<Present> (present1Set), new List<Present> (present2Set));
+				selectController.choosePresentSet (ref presentGroup1Store, ref presentGroup2Store);
+				himeManager.presentToHime (new List<Present> (presentGroup1Store), new List<Present> (presentGroup2Store));
 				break;
 			default:
 				Debug.Log ("do action nothing");
@@ -280,169 +238,6 @@ public class PresentManager : MonoBehaviour {
 		}
 	}
 
-	private void getOpponentSelectedPresent(out List<Present> opponentList, out List<Present> myList)
-	{
-		opponentList = new List<Present>();
-		myList = new List<Present>();
-		for (int i = 0; i < OpponentPresents.transform.childCount; i++) {
-			Present t = OpponentPresents.transform.GetChild (i).gameObject.GetComponent<Present> ();
-			if (t.PresentDirection == PresentDirection.FRONT) {
-				if( t.IsSelected ) {
-					myList.Add (t);
-				} else {
-					opponentList.Add (t);
-				}
-			}
-		}
-	}
-
-	private List<Present> getSelectedPresent()
-	{
-		List<Present> retv = new List<Present> ();
-		for (int i = 0; i < MyPresents.transform.childCount; i++) {
-			Present t = MyPresents.transform.GetChild (i).gameObject.GetComponent<Present> ();
-			if (t.IsSelected) {
-				retv.Add (t);
-			}
-		}
-
-		return retv;
-	}
-
-	private void presentToSecret(Present present)
-	{
-		present.transform.SetParent (MySecret.transform);
-	}
-
-	private void presentToDead(List<Present> presentList)
-	{
-		foreach (var present in presentList) {
-			present.transform.SetParent (MyTrash.transform);
-		}
-	}
-
-	public enum presentSetSelectType { NONE, SET1, SET2 };
-	private Present[] present1Set = new Present[2];
-	private Present[] present2Set = new Present[2];
-
-	public Present PresentSet {
-		set { 
-			if (present1Set [0] == null) {
-				present1Set [0] = value;
-			} else if (present1Set [1] == null) {
-				present1Set [1] = value;
-			} else if (present2Set [0] == null) {
-				present2Set [0] = value;
-			} else if (present2Set [1] == null) {
-				present2Set [1] = value;
-			}
-		}
-	}
-
-	private void setOpponentPresentGroup()
-	{
-		if (present1Set [0] == null) {
-			return;
-		}
-
-		foreach (var present in present1Set) {
-			present.SelectionGroup = Present.PresentGroup.UNSELECTED_GROUP1;
-		}
-
-		foreach (var present in present2Set) {
-			present.SelectionGroup = Present.PresentGroup.UNSELECTED_GROUP2;
-		}
-	}
-
-	public void unselectFromPresentSet(Present present)
-	{
-		for (int i = 0; i < present1Set.Length; i++) {
-			if (present1Set [i] == present) {
-				present1Set [i] = null;
-				return;
-			}
-		}
-
-		for (int i = 0; i < present2Set.Length; i++) {
-			if (present2Set [i] == present) {
-				present2Set [i] = null;
-				return;
-			}
-		}
-
-	}
-
-	public Present.PresentGroup getPresentGroupType()
-	{
-		if (isPresentSetSelect ()) {
-			foreach (var present in present1Set) {
-				if (present == null) {
-					return Present.PresentGroup.GROUP1;
-				}
-			}
-
-			foreach (var present in present2Set) {
-				if (present == null) {
-					return Present.PresentGroup.GROUP2;
-				}
-			}
-			return Present.PresentGroup.UNSELECTED;
-		} else {
-			return Present.PresentGroup.GROUP0;
-		}
-	}
-
-	public presentSetSelectType getSelectType()
-	{
-
-		foreach (var present in present1Set) {
-			if (present == null) {
-				return presentSetSelectType.SET1;
-			}
-		}
-
-		foreach (var present in present2Set) {
-			if (present == null) {
-				return presentSetSelectType.SET2;
-			}
-		}
-		return presentSetSelectType.NONE;
-	}
-
-	private void presentSetReset()
-	{
-
-		for (int i = 0; i < present1Set.Length; i++) {
-			present1Set [i] = null;
-		}
-
-		for (int i = 0; i < present2Set.Length; i++) {
-			present2Set [i] = null;
-		}
-	}
-
-	public bool isPresentSetSelect()
-	{
-		return presentSelectLimit == 4;
-	}
-
-	private void prioritySortInHand()
-	{
-		for (int i = 0; i < MyPresents.transform.childCount; i++) {
-			int minPriority = NumOfPresent;
-			int minIndex=0;
-
-			for (int j = 0; j < MyPresents.transform.childCount-i; j++) {
-				var t = MyPresents.transform.GetChild (j).gameObject.GetComponent<Present> ().Priority;
-				if (t < minPriority) {
-					minPriority = t;
-					minIndex = j;
-				}
-			}
-
-			MyPresents.transform.GetChild (minIndex).SetAsLastSibling();
-		}
-	}
 
 	public void drawToHand()
 	{
@@ -458,25 +253,23 @@ public class PresentManager : MonoBehaviour {
 		LeftPresents.transform.GetChild (0).SetParent (OpponentPresents.transform);
 	}
 
-	public List<Present> selectRandomOpponentPresent(int count)
+	public List<Present> getOpponentPresentInHand()
 	{
-
-		List<int> index = new List<int> ();
-		for (int i = 0; i < OpponentPresents.transform.childCount; i++) {
-			index.Add (i);
-		}
-
 		List<Present> retv = new List<Present> ();
-		for (int i = 0; i < count; i++) {
-			var randomIndex = Random.Range (0, index.Count);
-			retv.Add (OpponentPresents.transform.GetChild (index[randomIndex]).gameObject.GetComponent<Present> ());
-			if (count == 4) {
-				PresentSet = retv [retv.Count - 1];
-			}
-			index.RemoveAt (randomIndex);
+		for (int i = 0; i < OpponentPresents.transform.childCount; i++) {
+			retv.Add (OpponentPresents.transform.GetChild (i).gameObject.GetComponent<Present> ());
 		}
 
 		return retv;
+	}
+		
+	public void setPresentGroupStore(List<Present> list)
+	{
+		if (list.Count == 4) {
+			foreach (var present in list) {
+				PresentGroupStore = present;
+			}
+		}
 	}
 
 	public void presentToOpponentSecret(Present present)
@@ -502,4 +295,173 @@ public class PresentManager : MonoBehaviour {
 
 		setOpponentPresentGroup ();
 	}
+
+	private void sharePresent(GameObject parent, PresentDirection direction, int count, ref int listIndex)
+	{
+		for (int i = 0; i < count; i++) {
+			presentList [listIndex].transform.SetParent (parent.transform);
+			presentList [listIndex].PresentDirection = direction;
+			listIndex++;
+		}
+	}
+
+	private void unselectPresentsInMyHand()
+	{
+		for (int i = 0; i < MyPresents.transform.childCount; i++) {
+			MyPresents.transform.GetChild (i).gameObject.GetComponent<Present> ().SelectionGroup = Present.PresentGroup.UNSELECTED;
+		}
+	}
+
+	private void unselectPresentsInList(List<Present> list)
+	{
+		foreach (var present in list) {
+			present.SelectionGroup = Present.PresentGroup.UNSELECTED;
+		}
+	}
+
+	private void setPresentGroupByGroup(Present.PresentGroup group)
+	{
+		Present[] tmp;
+		if ( (group == Present.PresentGroup.UNSELECTED_GROUP1) 
+			|| (group == Present.PresentGroup.GROUP1)) {
+			tmp = presentGroup1Store;
+		} else {
+			tmp = presentGroup2Store;
+		}
+
+		foreach (var present in tmp) {
+			present.SelectionGroup = group;
+		}
+	}
+
+	private void divideSelectPresentInOpponent(out List<Present> opponentList, out List<Present> myList)
+	{
+		opponentList = new List<Present>();
+		myList = new List<Present>();
+		for (int i = 0; i < OpponentPresents.transform.childCount; i++) {
+			Present t = OpponentPresents.transform.GetChild (i).gameObject.GetComponent<Present> ();
+			if (t.PresentDirection == PresentDirection.FRONT) {
+				if( t.IsSelected ) {
+					myList.Add (t);
+				} else {
+					opponentList.Add (t);
+				}
+			}
+		}
+	}
+
+	private List<Present> getSelectedPresentInMyHand()
+	{
+		List<Present> retv = new List<Present> ();
+		for (int i = 0; i < MyPresents.transform.childCount; i++) {
+			Present t = MyPresents.transform.GetChild (i).gameObject.GetComponent<Present> ();
+			if (t.IsSelected) {
+				retv.Add (t);
+			}
+		}
+
+		return retv;
+	}
+
+	private void presentToSecret(Present present)
+	{
+		present.transform.SetParent (MySecret.transform);
+	}
+
+	private void presentToDead(List<Present> presentList)
+	{
+		foreach (var present in presentList) {
+			present.transform.SetParent (MyTrash.transform);
+		}
+	}
+
+	private void setOpponentPresentGroup()
+	{
+		if (presentGroup1Store [0] == null) {
+			return;
+		}
+
+		foreach (var present in presentGroup1Store) {
+			present.SelectionGroup = Present.PresentGroup.UNSELECTED_GROUP1;
+		}
+
+		foreach (var present in presentGroup2Store) {
+			present.SelectionGroup = Present.PresentGroup.UNSELECTED_GROUP2;
+		}
+	}
+
+	private void presentGroupReset()
+	{
+
+		for (int i = 0; i < presentGroup1Store.Length; i++) {
+			presentGroup1Store [i] = null;
+		}
+
+		for (int i = 0; i < presentGroup2Store.Length; i++) {
+			presentGroup2Store [i] = null;
+		}
+	}
+
+	private void prioritySortInHand()
+	{
+		for (int i = 0; i < MyPresents.transform.childCount; i++) {
+			int minPriority = NumOfPresent;
+			int minIndex=0;
+
+			for (int j = 0; j < MyPresents.transform.childCount-i; j++) {
+				var t = MyPresents.transform.GetChild (j).gameObject.GetComponent<Present> ().Priority;
+				if (t < minPriority) {
+					minPriority = t;
+					minIndex = j;
+				}
+			}
+
+			MyPresents.transform.GetChild (minIndex).SetAsLastSibling();
+		}
+	}
+
+	private void removeFromPresentGroupStore(Present present)
+	{
+		for (int i = 0; i < presentGroup1Store.Length; i++) {
+			if (presentGroup1Store [i] == present) {
+				presentGroup1Store [i] = null;
+				return;
+			}
+		}
+
+		for (int i = 0; i < presentGroup2Store.Length; i++) {
+			if (presentGroup2Store [i] == present) {
+				presentGroup2Store [i] = null;
+				return;
+			}
+		}
+
+	}
+
+	private Present.PresentGroup getTypeOfEmptyPresentGroupStore()
+	{
+		if (isPresentGroupSelectInMyHand ()) {
+			foreach (var present in presentGroup1Store) {
+				if (present == null) {
+					return Present.PresentGroup.GROUP1;
+				}
+			}
+
+			foreach (var present in presentGroup2Store) {
+				if (present == null) {
+					return Present.PresentGroup.GROUP2;
+				}
+			}
+			return Present.PresentGroup.UNSELECTED;
+		} else {
+			return Present.PresentGroup.GROUP0;
+		}
+	}
+
+	private bool isPresentGroupSelectInMyHand()
+	{
+		return presentSelectLimit == 4;
+	}
+
+
 }
