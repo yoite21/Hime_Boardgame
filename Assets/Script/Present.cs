@@ -15,11 +15,9 @@ public class Present : MonoBehaviour {
 	private Text groupText;
 
 	private PresentManager presentManager;
-	private ButtonManager buttonManager;
 
 	private int score;
 	public int Score {
-		get { return score; }
 		set { score = value; }
 	}
 
@@ -37,30 +35,53 @@ public class Present : MonoBehaviour {
 		
 	private PresentDirection presentDirection = PresentDirection.BACK;
 	public PresentDirection PresentDirection {
+		get { return presentDirection; }
 		set { 
 			presentDirection = value;
-			reset ();
+			setDirection ();
 		}
 	}
 
-	private bool isSelected = false;
-	public bool IsSelected {
-		get { return isSelected; }
+	public enum PresentGroup { UNSELECTED, GROUP0, GROUP1, GROUP2, UNSELECTED_GROUP1, UNSELECTED_GROUP2 };
+	private PresentGroup selectionGroup = PresentGroup.UNSELECTED;
+	public PresentGroup SelectionGroup {
+		get { return selectionGroup; }
+		set {
+			selectionGroup = value;
+			setSelection ();
+		}
 	}
 
-	private enum PresentGroup { NONE = 0, GROUP1, GROUP2 };
-	private PresentGroup group = PresentGroup.NONE;
+	public bool IsSelected {
+		get { return ((selectionGroup == PresentGroup.GROUP0)
+			|| (selectionGroup == PresentGroup.GROUP1)
+			|| (selectionGroup == PresentGroup.GROUP2)); }
+	}
 
 	void Start()
 	{
 		presentManager = GameObject.FindGameObjectWithTag ("PresentManager").GetComponent<PresentManager> ();
-		buttonManager = GameObject.FindGameObjectWithTag ("GameManager").GetComponent<ButtonManager> ();
 	}
 
-	private void reset()
+	public void selectPresent()
+	{
+		if (presentDirection == PresentDirection.BACK) {
+			return;
+		}
+
+		presentManager.selectPresent (this);
+		setSelection ();
+	}
+
+	private void setDirection()
 	{
 		setScoreText ();
 		setBackgroundColor ();
+	}
+
+	private void setSelection()
+	{
+		setSelectColor ();
 		setGroupText ();
 	}
 
@@ -88,17 +109,27 @@ public class Present : MonoBehaviour {
 		GetComponent<Image> ().color = color;
 	}
 
+	private void setSelectColor()
+	{
+		Image image = selectMarkImage.GetComponent<Image> ();
+		if ( this.IsSelected ) {
+			// selected
+			image.color = new Color(0,0,0,0.7f);
+		} else {
+			image.color = new Color(1,1,1,0.7f);
+		}
+	}
+
 	private void setGroupText()
 	{
 		string text = "";
-		switch (group) {
-		case PresentGroup.NONE:
-			text = "";
-			break;
+		switch (selectionGroup) {
 		case PresentGroup.GROUP1:
+		case PresentGroup.UNSELECTED_GROUP1:
 			text = "1";
 			break;
 		case PresentGroup.GROUP2:
+		case PresentGroup.UNSELECTED_GROUP2:
 			text = "2";
 			break;
 		default:
@@ -109,77 +140,5 @@ public class Present : MonoBehaviour {
 		groupText.text = text;
 	}
 
-	public void selectPresent()
-	{
-		if (presentDirection == PresentDirection.BACK) {
-			return;
-		}
 
-		// check state
-		if (buttonManager.LastActionButton == null) {
-			return;
-		}
-
-		if (presentManager.isPresentSetSelect ()) {
-			if ( !isSelected )
-			{
-				if (!presentManager.isSelectable ()) {
-					return;
-				}
-
-				var selectType = presentManager.getSelectType ();
-				if (selectType == PresentManager.presentSetSelectType.SET1) {
-
-					group = PresentGroup.GROUP1;
-					presentManager.PresentSet = this;
-					presentManager.increaseSelectCount (1);
-				} else if (selectType == PresentManager.presentSetSelectType.SET2) {
-
-					group = PresentGroup.GROUP2;
-					presentManager.PresentSet = this;
-					presentManager.increaseSelectCount (1);
-				}
-			} else {
-				group = PresentGroup.NONE;
-				presentManager.unselectFromPresentSet (this);
-				presentManager.increaseSelectCount (-1);		
-			}
-		} else {
-			group = PresentGroup.NONE;
-
-			if (!isSelected) {
-				if (presentManager.isSelectable ()) {
-					presentManager.increaseSelectCount (1);
-				} else {
-					return;
-				}
-			} else {
-				presentManager.increaseSelectCount (-1);
-			}
-
-		}
-
-		isSelected = !isSelected;
-		setSelectColor (isSelected);
-		setGroupText ();
-
-	}
-
-	public void unselectPresent()
-	{
-		group = PresentGroup.NONE;
-		isSelected = false;
-		setSelectColor (false);
-		setGroupText ();
-	}
-
-	private void setSelectColor(bool isSelected)
-	{
-		Image image = selectMarkImage.GetComponent<Image> ();
-		if (isSelected) {
-			image.color = new Color(0,0,0,0.7f);
-		} else {
-			image.color = new Color(1,1,1,0.7f);
-		}
-	}
 }

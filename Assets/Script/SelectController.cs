@@ -32,8 +32,10 @@ public class SelectController : MonoBehaviour {
 
 	public void actionPoolReset ()
 	{
+//		actionPool = new List<int>{ 1, 2, 3, 4 };
 
-		actionPool = new List<int>{ 1, 2, 3, 4 };
+		//		actionPool = new List<int>{ 1,2,1,2,1 };
+				actionPool = new List<int>{ 4,4,4,4,4 };
 	}
 
 	public void doOpponentTurn()
@@ -53,11 +55,11 @@ public class SelectController : MonoBehaviour {
 			break;
 		case 3:
 			presentManager.presentToPlayerSelect (list);
-			gameManager.IsPlayerSelect = true;
+			gameManager.CurrentState = GameManager.GameState.PLAYER_SELECTION;
 			break;
 		case 4:
 			presentManager.presentToPlayerSelect (list);
-			gameManager.IsPlayerSelect = true;
+			gameManager.CurrentState = GameManager.GameState.PLAYER_SELECTION;
 			break;
 		}
 	}

@@ -7,6 +7,8 @@ public class ButtonManager : MonoBehaviour {
 
 	[SerializeField]
 	private PresentManager presentManager;
+	[SerializeField]
+	private GameManager gameManager;
 
 	[SerializeField]
 	private Button cancelButton;
@@ -21,6 +23,7 @@ public class ButtonManager : MonoBehaviour {
 
 	public void yesButtonClicked()
 	{
+		
 		presentManager.actionPresent ();
 		resetSelectState (false);
 	}
@@ -32,11 +35,13 @@ public class ButtonManager : MonoBehaviour {
 
 	public void actionButtonClicked(Button button)
 	{
-		resetSelectState (true);
+		if (gameManager.CurrentState == GameManager.GameState.PLAYER_TURN) {
+			resetSelectState (true);
 
-		cancelButton.interactable = true;
-		button.interactable = false;
-		lastActionButton = button;
+			cancelButton.interactable = true;
+			button.interactable = false;
+			lastActionButton = button;
+		}
 	}
 
 	private void resetSelectState(bool resetLastActionButton)

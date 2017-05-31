@@ -15,15 +15,11 @@ public class GameManager : MonoBehaviour {
 	[SerializeField]
 	private SelectController selectController;
 
-	private enum GameState { PLAYER_TURN, PLAYER_SELECTION, OPPONENT_TURN, OPPONENT_SELECTION};
-	private GameState gameState;
-
-
-	private bool isPlayerTurn = true;
-
-	private bool isPlayerSelect = false;
-	public bool IsPlayerSelect {
-		set { isPlayerSelect = value; }
+	public enum GameState { PLAYER_TURN, PLAYER_SELECTION, OPPONENT_TURN, OPPONENT_SELECTION};
+	private GameState currentState;
+	public GameState CurrentState {
+		set { currentState = value; }
+		get { return currentState; }
 	}
 
 	void Start() {
@@ -52,18 +48,17 @@ public class GameManager : MonoBehaviour {
 
 	private void playerTurnStart()
 	{
-		gameState = GameState.PLAYER_TURN;
-		isPlayerTurn = true;
+		currentState = GameState.PLAYER_TURN;
 		presentManager.drawToHand ();
 
 	}
 
 	private void opponentTurnStart()
 	{
-		isPlayerTurn = false;
+		currentState = GameState.OPPONENT_TURN;
 		presentManager.drawToOpponent ();
 		selectController.doOpponentTurn ();
-		if (!isPlayerSelect) {
+		if (currentState != GameState.PLAYER_SELECTION) {
 			nextTurn ();
 		}
 	}
@@ -81,7 +76,7 @@ public class GameManager : MonoBehaviour {
 			return;
 		} 
 
-		if (isPlayerTurn) {
+		if (currentState == GameState.PLAYER_TURN) {
 			opponentTurnStart ();
 		} else {
 			playerTurnStart ();
@@ -90,10 +85,6 @@ public class GameManager : MonoBehaviour {
 
 	public void yesButtonClicked()
 	{
-		if (isPlayerSelect) {
-			isPlayerSelect = false;
-		} else {
-			nextTurn ();
-		}
+		nextTurn ();
 	}
 }
