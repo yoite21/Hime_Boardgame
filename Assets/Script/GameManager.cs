@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour {
 	private HimeManager himeManager;
 	[SerializeField]
 	private SelectController selectController;
+	[SerializeField]
+	private ButtonManager buttonManager;
 
 	public enum GameState { PLAYER_TURN, PLAYER_SELECTION, OPPONENT_TURN, OPPONENT_SELECTION};
 	private GameState currentState;
@@ -41,7 +43,9 @@ public class GameManager : MonoBehaviour {
 	{
 		presentManager.presentReset ();
 		selectController.actionPoolReset ();
+		buttonManager.resetActionButton ();
 
+		playerTurnStart ();
 		// TODO
 		// player turn or opponent turn start by before round
 	}
@@ -65,14 +69,19 @@ public class GameManager : MonoBehaviour {
 
 	private bool endCheck ()
 	{
-		// TODO
-		return false;
+		if (presentManager.IsLeftPresentEmpty ()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public void nextTurn()
 	{
 		if (endCheck ()) {
-			// TODO
+			Debug.Log ("end");
+
+			scoringRound ();
 			return;
 		} 
 
@@ -86,5 +95,32 @@ public class GameManager : MonoBehaviour {
 	public void yesButtonClicked()
 	{
 		nextTurn ();
+	}
+
+	private void scoringRound()
+	{
+		presentManager.secretToHime ();
+		himeManager.moveHeart ();
+		int myScore = 0;
+		int myHeart = 0;
+		int opponentHeart = 0;
+		int opponentScore = 0;
+
+		himeManager.getScore (out myScore, out myHeart, out opponentScore, out opponentHeart);
+
+		Debug.Log ("my score : " + myScore + ", my heart count : " + myHeart);
+		Debug.Log ("opp score : " + opponentScore + ", opp heart count : " + opponentHeart);
+
+		if (myScore >= 11) {
+			Debug.Log ("you win!");
+		} else if (opponentScore >= 11) {
+			Debug.Log ("you lose");
+		} else if (myHeart >= 4) {
+			Debug.Log ("you win!");
+		} else if (opponentHeart >= 4) {
+			Debug.Log ("you lose");
+		} else {
+			buttonManager.nextButtonActive ();
+		}
 	}
 }

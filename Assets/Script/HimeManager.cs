@@ -42,7 +42,7 @@ public class HimeManager : MonoBehaviour {
 			hime.BackgroundColor = himeInfoPool [i].backgroundColor;
 			hime.init ();
 
-			hime.setHeartState (HeartState.NONE);
+			hime.HeartState = HeartType.NONE;
 		}
 	}
 
@@ -50,7 +50,7 @@ public class HimeManager : MonoBehaviour {
 	{
 		for (int i = 0; i < transform.childCount; i++) {
 			Hime hime = transform.GetChild (i).GetComponent<Hime>();
-			hime.setHeartState (HeartState.NONE);
+			hime.HeartState = HeartType.NONE;
 		}
 	}
 
@@ -67,6 +67,41 @@ public class HimeManager : MonoBehaviour {
 				present.transform.SetParent (opponentPresent);
 			}
 		}
+	}
+
+	public void moveHeart()
+	{
+		for (int i = 0; i < transform.childCount; i++) {
+			var hime = transform.GetChild (i).gameObject.GetComponent<Hime> ();
+			int myPresent = hime.transform.FindChild ("MyPresents").transform.childCount;
+			int opponentPresent = hime.transform.FindChild ("OpponentPresents").transform.childCount;
+
+			if (myPresent > opponentPresent) {
+				hime.HeartState = HeartType.MINE;
+			} else if (myPresent < opponentPresent) {
+				hime.HeartState = HeartType.OPPONENT;
+			}
+		}
+	}
+
+	public void getScore (out int myScore, out int myHeart, out int opponentScore, out int opponentHeart)
+	{
+		myScore = 0;
+		myHeart = 0;
+		opponentHeart = 0;
+		opponentScore = 0;
+
+		for (int i = 0; i < transform.childCount; i++) {
+			var hime = transform.GetChild (i).gameObject.GetComponent<Hime> ();
+			if (hime.HeartState == HeartType.MINE) {
+				myHeart++;
+				myScore += hime.Score;
+			} else if (hime.HeartState == HeartType.OPPONENT) {
+				opponentHeart++;
+				opponentScore += hime.Score;
+			}
+		}
+		
 	}
 
 	private Hime getCorrectHime(Color color)

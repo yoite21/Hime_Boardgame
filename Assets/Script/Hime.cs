@@ -4,12 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-public enum HeartState {OPPONENT=0, NONE, MINE};
+public enum HeartType {OPPONENT, NONE, MINE};
 
 public class Hime : MonoBehaviour {
 
 	private int score;
 	public int Score {
+		get { return score; }
 		set { score = value; }
 	}
 
@@ -27,7 +28,17 @@ public class Hime : MonoBehaviour {
 		new Vector3(0,-40,0)
 	};
 
-	public void setHeartState(HeartState state)
+	private HeartType heartState = HeartType.NONE;
+	public HeartType HeartState {
+		get { return heartState; }
+		set { 
+			heartState = value;
+			setHeartState (value);
+		}
+	}
+
+
+	private void setHeartState(HeartType state)
 	{
 		transform.GetChild (0).transform.localPosition = heartPosition [(int)state];
 	}

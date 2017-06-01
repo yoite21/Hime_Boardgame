@@ -296,6 +296,21 @@ public class PresentManager : MonoBehaviour {
 		setOpponentPresentGroup ();
 	}
 
+	public bool IsLeftPresentEmpty()
+	{
+		return (LeftPresents.transform.childCount == 0);
+	}
+
+	public void secretToHime()
+	{
+		List<Present> mySecretPresent = new List<Present> ();
+		mySecretPresent.Add (MySecret.transform.GetChild(1).gameObject.GetComponent<Present> ());
+		List<Present> opponentSecretPresent = new List<Present> ();
+		opponentSecretPresent.Add(OpponentSecret.transform.GetChild(1).gameObject.GetComponent<Present>());
+		opponentSecretPresent [0].PresentDirection = PresentDirection.FRONT;
+		himeManager.presentToHime (mySecretPresent, opponentSecretPresent);
+	}
+
 	private void sharePresent(GameObject parent, PresentDirection direction, int count, ref int listIndex)
 	{
 		for (int i = 0; i < count; i++) {

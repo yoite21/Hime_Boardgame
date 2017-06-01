@@ -16,6 +16,12 @@ public class ButtonManager : MonoBehaviour {
 	[SerializeField]
 	private Button yesButton;
 
+	[SerializeField]
+	private GameObject actionButtons;
+
+	[SerializeField]
+	private Button nextButton;
+
 	private Button lastActionButton = null;
 	public Button LastActionButton {
 		get { return lastActionButton; }
@@ -58,7 +64,27 @@ public class ButtonManager : MonoBehaviour {
 
 	public void actionButtonSetValue(int value)
 	{
-		presentManager.resetPresentSelectLimit (value);
+		if (gameManager.CurrentState == GameManager.GameState.PLAYER_TURN) {
+			presentManager.resetPresentSelectLimit (value);
+		}
 	}
 
+	public void resetActionButton()
+	{
+		for (int i = 0; i < actionButtons.transform.childCount; i++) {
+			var button = actionButtons.transform.GetChild (i).gameObject.GetComponent<Button> ();
+			button.interactable = true;
+		}
+	}
+
+	public void nextButtonClicked()
+	{
+		nextButton.interactable = false;
+		gameManager.softReset ();
+	}
+
+	public void nextButtonActive()
+	{
+		nextButton.interactable = true;
+	}
 }
