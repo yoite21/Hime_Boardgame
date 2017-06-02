@@ -57,14 +57,12 @@ public class HimeManager : MonoBehaviour {
 	public void presentToHime(List<Present> presents, List<Present> opponentPresents)
 	{
 		foreach (var present in presents) {
-			var myPresents = getCorrectHime (present.BackgroundColor).transform.FindChild ("MyPresents");
-			present.transform.SetParent (myPresents);
+			getCorrectHime (present.BackgroundColor).addMyPresent (present);
 		}
 
 		if (opponentPresents != null) {
 			foreach (var present in opponentPresents) {
-				var opponentPresent = getCorrectHime (present.BackgroundColor).transform.FindChild ("OpponentPresents");
-				present.transform.SetParent (opponentPresent);
+				getCorrectHime (present.BackgroundColor).addOpponentPresent (present);
 			}
 		}
 	}
@@ -72,15 +70,7 @@ public class HimeManager : MonoBehaviour {
 	public void moveHeart()
 	{
 		for (int i = 0; i < transform.childCount; i++) {
-			var hime = transform.GetChild (i).gameObject.GetComponent<Hime> ();
-			int myPresent = hime.transform.FindChild ("MyPresents").transform.childCount;
-			int opponentPresent = hime.transform.FindChild ("OpponentPresents").transform.childCount;
-
-			if (myPresent > opponentPresent) {
-				hime.HeartState = HeartType.MINE;
-			} else if (myPresent < opponentPresent) {
-				hime.HeartState = HeartType.OPPONENT;
-			}
+			transform.GetChild (i).gameObject.GetComponent<Hime> ().moveHeart();
 		}
 	}
 
