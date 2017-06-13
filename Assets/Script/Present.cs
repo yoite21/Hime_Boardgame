@@ -73,6 +73,11 @@ public class Present : MonoBehaviour {
 		setSelection ();
 	}
 
+	public void moveToPosition(Vector3 target, Transform parent)
+	{
+		StartCoroutine (moveTo (target, parent));
+	}
+
 	private void setDirection()
 	{
 		setScoreText ();
@@ -138,6 +143,22 @@ public class Present : MonoBehaviour {
 		}
 
 		groupText.text = text;
+	}
+
+	IEnumerator moveTo(Vector3 targetPosition, Transform newParent)
+	{
+		Debug.Log (targetPosition);
+
+		transform.SetParent (transform.parent.parent);
+
+		Vector3 currentVelocity = Vector3.zero;
+		while (Vector3.Distance( transform.position, targetPosition) > 0.1) {
+			transform.position = Vector3.SmoothDamp (transform.position, targetPosition, ref currentVelocity, 0.5f);
+
+			yield return null;
+		}
+
+		transform.SetParent (newParent);
 	}
 
 

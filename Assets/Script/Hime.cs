@@ -60,7 +60,11 @@ public class Hime : MonoBehaviour {
 
 	public void addMyPresent(Present present)
 	{
-		present.transform.SetParent (myPresent.transform);
+
+		Vector3[] positions;
+		myPresent.GetComponent<LayoutGroupHelper> ().getNextPosition (1, out positions);
+		present.moveToPosition (positions [0], myPresent.transform);
+
 		if (myPresent.transform.childCount > 3) {
 			myPresent.spacing = -20;
 		} else {
@@ -70,7 +74,10 @@ public class Hime : MonoBehaviour {
 
 	public void addOpponentPresent(Present present)
 	{
-		present.transform.SetParent (opponentPresent.transform);
+		Vector3[] positions;
+		opponentPresent.GetComponent<LayoutGroupHelper> ().getNextPosition (1, out positions);
+		present.moveToPosition (positions [0], opponentPresent.transform);
+
 		if (opponentPresent.transform.childCount > 3) {
 			opponentPresent.spacing = -20;
 		} else {

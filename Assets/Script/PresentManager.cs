@@ -274,13 +274,19 @@ public class PresentManager : MonoBehaviour {
 
 	public void presentToOpponentSecret(Present present)
 	{
-		present.transform.SetParent (OpponentSecret.transform);
+		Vector3[] positions;
+		OpponentSecret.GetComponent<LayoutGroupHelper>().getNextPosition(1, out positions);
+
+		present.moveToPosition (positions [0], OpponentSecret.transform);
 	}
 
 	public void presentToOpponentTrash(List<Present> list)
 	{
-		foreach (var present in list) {
-			present.transform.SetParent (OpponentTrash.transform);
+		Vector3[] positions;
+		OpponentTrash.GetComponent<LayoutGroupHelper> ().getNextPosition (2, out positions);
+
+		for (int i = 0; i < list.Count; i++) {
+			list [i].moveToPosition (positions [i], OpponentTrash.transform);
 		}
 	}
 
@@ -380,13 +386,19 @@ public class PresentManager : MonoBehaviour {
 
 	private void presentToSecret(Present present)
 	{
-		present.transform.SetParent (MySecret.transform);
+		Vector3[] positions;
+		MySecret.GetComponent<LayoutGroupHelper> ().getNextPosition (1, out positions);
+
+		present.moveToPosition (positions [0], MySecret.transform);
 	}
 
 	private void presentToDead(List<Present> presentList)
-	{
-		foreach (var present in presentList) {
-			present.transform.SetParent (MyTrash.transform);
+	{	
+		Vector3[] positions;
+		MyTrash.GetComponent<LayoutGroupHelper> ().getNextPosition (2, out positions);
+
+		for (int i = 0; i < presentList.Count; i++) {
+			presentList [i].moveToPosition (positions [i], MyTrash.transform);
 		}
 	}
 
