@@ -142,12 +142,16 @@ public class Present : MonoBehaviour {
 			break;
 		}
 
+
+
 		groupText.text = text;
 	}
 
-	IEnumerator moveTo(Vector3 targetPosition, Transform newParent)
+	public IEnumerator moveTo(Vector3 targetPosition, Transform newParent)
 	{
 		Debug.Log (targetPosition);
+
+		presentManager.presentMoveAnimationStart();
 
 		transform.SetParent (transform.parent.parent);
 
@@ -159,6 +163,8 @@ public class Present : MonoBehaviour {
 		}
 
 		transform.SetParent (newParent);
+
+		presentManager.presentMoveAnimationEnd ();
 	}
 
 

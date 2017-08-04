@@ -80,7 +80,8 @@ public class ButtonManager : MonoBehaviour {
 	public void nextButtonClicked()
 	{
 		nextButton.interactable = false;
-		gameManager.softReset ();
+		gameManager.playerTurnStart ();
+//		gameManager.softReset ();
 	}
 
 	public void nextButtonActive()

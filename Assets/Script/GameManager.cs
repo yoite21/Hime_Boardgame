@@ -18,10 +18,17 @@ public class GameManager : MonoBehaviour {
 	private ButtonManager buttonManager;
 
 	public enum GameState { PLAYER_TURN, PLAYER_SELECTION, OPPONENT_TURN, OPPONENT_SELECTION};
+	public enum NGameState { PlayerTurn, PlayerSelect, OpponentTurn, OpponentSelect}; 
 	private GameState currentState;
 	public GameState CurrentState {
 		set { currentState = value; }
 		get { return currentState; }
+	}
+
+	void Awake() {
+		himeManager.heartReset();
+		presentManager.presentReset ();
+		selectController.actionPoolReset ();
 	}
 
 	void Start() {
@@ -34,9 +41,11 @@ public class GameManager : MonoBehaviour {
 		presentManager.presentReset ();
 		selectController.actionPoolReset ();
 
+
 		// TODO
 		// random player turn start or opponent turn start
-		playerTurnStart ();
+		buttonManager.nextButtonActive();
+//		playerTurnStart ();
 	}
 
 	public void softReset()
@@ -50,7 +59,7 @@ public class GameManager : MonoBehaviour {
 		// player turn or opponent turn start by before round
 	}
 
-	private void playerTurnStart()
+	public void playerTurnStart()
 	{
 		currentState = GameState.PLAYER_TURN;
 		presentManager.drawToHand ();
@@ -63,7 +72,7 @@ public class GameManager : MonoBehaviour {
 		presentManager.drawToOpponent ();
 		selectController.doOpponentTurn ();
 		if (currentState != GameState.PLAYER_SELECTION) {
-			nextTurn ();
+//			nextTurn ();
 		}
 	}
 
@@ -78,6 +87,12 @@ public class GameManager : MonoBehaviour {
 
 	public void nextTurn()
 	{
+
+		Debug.Log ("next turn call");
+		if (currentState == GameState.PLAYER_SELECTION) {
+			return;
+		}
+
 		if (endCheck ()) {
 			Debug.Log ("end");
 

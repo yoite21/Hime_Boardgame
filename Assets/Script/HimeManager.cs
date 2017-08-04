@@ -33,7 +33,7 @@ public class HimeManager : MonoBehaviour {
 		}
 	}
 
-	void Start()
+	void Awake()
 	{
 		// hime init
 		for (int i = 0; i < transform.childCount; i++) {

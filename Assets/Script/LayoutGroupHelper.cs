@@ -13,13 +13,15 @@ public class LayoutGroupHelper : MonoBehaviour {
 
 	private int childCount = 0;
 
-	// Use this for initialization
-	void Start () {
+	void Awake() {
 		layoutGroup = GetComponent<HorizontalOrVerticalLayoutGroup> ();
 		if (layoutGroup) {
 			childAlignment = layoutGroup.childAlignment;
+		} else {
+			Debug.Log ("no layout group");
 		}
 	}
+
 
 	public void getNextPosition(int count, out Vector3[] positions) {
 		positions = new Vector3[count];
@@ -60,5 +62,28 @@ public class LayoutGroupHelper : MonoBehaviour {
 
 	public void getNextPositionForDrawHand(int priority, out Vector3 position) {
 		position = new Vector3 ();
+
+		int insertIndex = transform.childCount;
+		for (int i = 0; i < transform.childCount; i++) {
+			if (priority < transform.GetChild (i).gameObject.GetComponent<Present> ().Priority) {
+				Debug.Log (priority);
+				insertIndex = i;
+				break;
+			}
+		}
+
+		if (insertIndex == 0) {
+			position = transform.GetChild (0).transform.position;
+			position.x -= 25 - layoutGroup.spacing / 2;
+		} else if (insertIndex == transform.childCount) {
+			position = transform.GetChild (insertIndex-1).transform.position;
+			position.x += 25 + layoutGroup.spacing / 2;
+		} else {
+			Vector3 rightPosition = transform.GetChild (insertIndex).transform.position;
+			Vector3 leftPosition = transform.GetChild (insertIndex - 1).transform.position;
+
+			position = (rightPosition + leftPosition) / 2;
+			
+		}
 	}
 }

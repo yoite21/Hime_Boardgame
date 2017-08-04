@@ -57,7 +57,7 @@ public class PresentManager : MonoBehaviour {
 		}
 	}
 
-	void Start()
+	void Awake()
 	{
 		// present instantiate
 		var himeInfoPool = GameObject.FindWithTag ("HimeManager").GetComponent<HimeManager> ().HimeInfoPool;
@@ -241,12 +241,41 @@ public class PresentManager : MonoBehaviour {
 
 	public void drawToHand()
 	{
+//		var drawPresent = LeftPresents.transform.GetChild (0);
+//
+//		drawPresent.GetComponent<Present> ().PresentDirection = PresentDirection.FRONT;
+//
+//		Vector3 position;
+//		MyPresents.GetComponent<LayoutGroupHelper> ().getNextPositionForDrawHand (drawPresent.GetComponent<Present> ().Priority, out position);
+//
+//		drawPresent.GetComponent<Present> ().moveToPosition (position, MyPresents.transform);
+//
+////		drawPresent.SetParent (MyPresents.transform);
+//		prioritySortInHand ();
+
+		StartCoroutine (drawToMyHand());
+
+	}
+
+	IEnumerator drawToMyHand()
+	{
 		var drawPresent = LeftPresents.transform.GetChild (0);
 
 		drawPresent.GetComponent<Present> ().PresentDirection = PresentDirection.FRONT;
-		drawPresent.SetParent (MyPresents.transform);
+
+		Vector3 position;
+		MyPresents.GetComponent<LayoutGroupHelper> ().getNextPositionForDrawHand (drawPresent.GetComponent<Present> ().Priority, out position);
+
+//		drawPresent.GetComponent<Present> ().moveToPosition (position, MyPresents.transform);
+		presentMoveCount = 1;
+		yield return StartCoroutine(drawPresent.GetComponent<Present>().moveTo(position, MyPresents.transform));
+
+		//		drawPresent.SetParent (MyPresents.transform);
 		prioritySortInHand ();
+
 	}
+
+
 
 	public void drawToOpponent()
 	{
@@ -276,6 +305,7 @@ public class PresentManager : MonoBehaviour {
 	{
 		Vector3[] positions;
 		OpponentSecret.GetComponent<LayoutGroupHelper>().getNextPosition(1, out positions);
+		presentMoveCount = 1;
 
 		present.moveToPosition (positions [0], OpponentSecret.transform);
 	}
@@ -284,6 +314,7 @@ public class PresentManager : MonoBehaviour {
 	{
 		Vector3[] positions;
 		OpponentTrash.GetComponent<LayoutGroupHelper> ().getNextPosition (2, out positions);
+		presentMoveCount = list.Count;
 
 		for (int i = 0; i < list.Count; i++) {
 			list [i].moveToPosition (positions [i], OpponentTrash.transform);
@@ -389,6 +420,7 @@ public class PresentManager : MonoBehaviour {
 		Vector3[] positions;
 		MySecret.GetComponent<LayoutGroupHelper> ().getNextPosition (1, out positions);
 
+		presentMoveCount = 1;
 		present.moveToPosition (positions [0], MySecret.transform);
 	}
 
@@ -396,6 +428,8 @@ public class PresentManager : MonoBehaviour {
 	{	
 		Vector3[] positions;
 		MyTrash.GetComponent<LayoutGroupHelper> ().getNextPosition (2, out positions);
+
+		presentMoveCount = presentList.Count;
 
 		for (int i = 0; i < presentList.Count; i++) {
 			presentList [i].moveToPosition (positions [i], MyTrash.transform);
@@ -429,7 +463,7 @@ public class PresentManager : MonoBehaviour {
 		}
 	}
 
-	private void prioritySortInHand()
+	public void prioritySortInHand()
 	{
 		for (int i = 0; i < MyPresents.transform.childCount; i++) {
 			int minPriority = NumOfPresent;
@@ -488,6 +522,24 @@ public class PresentManager : MonoBehaviour {
 	private bool isPresentGroupSelectInMyHand()
 	{
 		return presentSelectLimit == 4;
+	}
+
+	private int presentMoveCount = 0;
+
+	public void presentMoveAnimationStart()
+	{
+		presentMoveCount++;
+	}
+
+	public void presentMoveAnimationEnd()
+	{
+		presentMoveCount--;
+		if (presentMoveCount == 0) {
+			Debug.Log ("move animation end");
+			gameManager.nextTurn ();
+			// call game manager to next turn
+		}
+		
 	}
 
 
